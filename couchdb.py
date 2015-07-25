@@ -18,9 +18,10 @@ def _type(key, subkey):
 def configure_callback(configuration, conf):
     collectd.debug("CouchDB plugin configure callback")
     for node in conf.children:
-        if node.key == 'url':
+        if node.key.lower() == 'url':
             configuration['url'] = node.values[0].rstrip("/")
-
+        else:
+            raise RuntimeError("Unknown configuration key %s" % node.key)
 
 def read_callback(configuration):
     r = requests.get(configuration['url'] + "/_stats")
