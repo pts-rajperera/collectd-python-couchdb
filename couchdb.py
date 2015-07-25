@@ -3,6 +3,7 @@ import requests
 import json
 import numbers
 
+DB_METRICS = ('data_size', 'doc_count', 'doc_del_count', 'disk_size')
 
 def _type(key, subkey):
     if key == 'httpd_request_methods':
@@ -34,6 +35,14 @@ def read_callback(configuration):
                     val.type_instance = m_type
                     val.values = [value]
                     val.dispatch()
+    dbs = set(requests.get(configuration['url'] + "/_all_dbs").json())
+    for db in dbs ^ set(['_replicator', '_users']):
+        metrics = requests.get(configuration['url'] + "/" + db).json()
+        for metric in DB_METRICS:
+            val = collectd.Values(plugin='couchdb', type="guage", plugin_instance='db_stats')
+            val.values = [metrics[metric]]
+            val.type_insance = metric
+            val.dispatch()
 
 # register callbacks
 configuration = {}
