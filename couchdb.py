@@ -39,9 +39,9 @@ def read_callback(configuration):
     for db in dbs ^ set(['_replicator', '_users']):
         metrics = requests.get(configuration['url'] + "/" + db).json()
         for metric in DB_METRICS:
-            val = collectd.Values(plugin='couchdb', type="guage", plugin_instance='db_stats')
+            val = collectd.Values(plugin='couchdb', type="gauge", plugin_instance='db_stats')
             val.values = [metrics[metric]]
-            val.type_insance = metric
+            val.type_instance = metric
             val.dispatch()
 
 # register callbacks
