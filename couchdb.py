@@ -32,11 +32,11 @@ def read_callback(configuration):
             for subkey, metrics in data.iteritems():
                 for m_type, value in metrics.iteritems():
                     if isinstance(value, numbers.Number):
-                            val = collectd.Values(plugin='couchdb', type=_type(key, subkey))
-                            val.plugin_instance = key + "_" + subkey
-                            val.type_instance = m_type + "_" + interval
-                            val.values = [value]
-                            val.dispatch()
+                        val = collectd.Values(plugin='couchdb', type=_type(key, subkey))
+                        val.plugin_instance = key + "_" + subkey
+                        val.type_instance = m_type + "_" + interval
+                        val.values = [value]
+                        val.dispatch()
     dbs = set(requests.get(configuration['url'] + "/_all_dbs").json())
     for db in dbs ^ set(['_replicator', '_users']):
         metrics = requests.get(configuration['url'] + "/" + db).json()
