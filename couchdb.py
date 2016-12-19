@@ -3,7 +3,13 @@ import requests
 import numbers
 
 DB_METRICS = ('data_size', 'doc_count', 'doc_del_count', 'disk_size')
-
+COUCH_METRICS = ('bulk_requests',
+                 'view_reads',
+                 'requests',
+                 'database_reads',
+                 'database_writes',
+                 '500', '412', '403', '401', '409', '405', '404', '404',
+                 'request_time')
 
 def _type(key, subkey):
     if key == 'httpd_request_methods':
@@ -26,17 +32,18 @@ def configure_callback(configuration, conf):
 
 
 def read_callback(configuration):
-    for interval in (0, 60, 300, 900):
+    for interval in (60, 300):
         r = requests.get("{}/_stats?range={}".format(configuration['url'], interval))
         for key, data in r.json().iteritems():
             for subkey, metrics in data.iteritems():
-                for m_type, value in metrics.iteritems():
-                    if isinstance(value, numbers.Number):
-                        val = collectd.Values(plugin='couchdb', type=_type(key, subkey))
-                        val.plugin_instance = "{}_{}".format(key, subkey)
-                        val.type_instance = "{}_{}".format(m_type, interval)
-                        val.values = [value]
-                        val.dispatch()
+                if subkey in COUCH_METRICS:
+                    for m_type, value in metrics.iteritems():
+                        if isinstance(value, numbers.Number):
+                            val = collectd.Values(plugin='couchdb', type=_type(key, subkey))
+                            val.plugin_instance = "{}_{}".format(key, subkey)
+                            val.type_instance = "{}_{}".format(m_type, interval)
+                            val.values = [value]
+                            val.dispatch()
     dbs = set(requests.get("{}/_all_dbs".format(configuration['url'])).json())
     for db in dbs ^ set(['_replicator', '_users']):
         metrics = requests.get("{}/{}".format(configuration['url'], db)).json()
